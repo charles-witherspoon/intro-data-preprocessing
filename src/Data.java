@@ -2,16 +2,16 @@ import java.util.Arrays;
 
 public class Data {
 
-    private final boolean classification;
+    private final int classification;
 
     private final double[] genes;
 
     public Data(String classification, String[] genes) {
-        this.classification = "positive".equalsIgnoreCase(classification);
+        this.classification = "positive".equalsIgnoreCase(classification) ? 1 : 0;
         this.genes = Arrays.stream(genes).mapToDouble(Double::parseDouble).toArray();
     }
 
-    public boolean getClassification() {
+    public int getClassification() {
         return classification;
     }
 

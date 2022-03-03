@@ -17,10 +17,7 @@ public class P1DPP {
             return;
 
         // Task 1
-        for (int i = 0; i < dataset.length; i++) {
-            Data data = dataset[i];
-            System.out.printf("index: %s\t genes:%d\t class:%s\n", i, data.getGenes().length, data.getClassification());
-        }
+        doTask1(dataset);
 
         // Task 2
     }
@@ -46,5 +43,22 @@ public class P1DPP {
             System.out.printf("Unable to read csv file due to error: %s\n", e);
             return null;
         }
+    }
+
+    private static void doTask1(Data[] dataset) {
+
+        // for each gene:
+        //   - get total entropy (to be used for determining information gain)
+        //   - collect gx -> class tuples
+        //   - sort tuples
+        //   - check each split
+        //     - entropy(s) = -(p log p - n log n)
+        //     - IS(S1,S2) = (|S1|/|S|)Entropy(S1) + (|S2|/|S|)Entropy(S2)
+        //     - Gain(v,S) = Entropy(S) - IS(S1,S2)
+        //   - once best split is found:
+        //     - add to discretization map
+
+        Gene g0 = new Gene(0, dataset);
+        g0.getFeatures().forEach(f -> System.out.printf("%f, %d\n", f.getValue(), f.getClassification()));
     }
 }
