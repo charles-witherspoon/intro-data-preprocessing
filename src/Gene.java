@@ -30,5 +30,4 @@ public class Gene {
             .sorted(Comparator.comparingDouble(Feature::getValue))
             .collect(Collectors.toList());
     }
-
 }
