@@ -71,7 +71,8 @@ public class P1DPP {
         printAttRankEntropy(bestKGenes, k);
 
         // (b)
-        printEntropyItemMap(bestKGenes);
+        Map<Integer, MapItem> discretizationMap = getDiscretizationMap(bestKGenes);
+        printEntropyItemMap(discretizationMap);
 
         // (c)
         printItemizedDataEntropy();
@@ -146,20 +147,39 @@ public class P1DPP {
         System.out.println("\n");
     }
 
-    private static void printEntropyItemMap(List<Split> bestKGenes) {
+    private static void printEntropyItemMap(Map<Integer, MapItem> dMap) {
         System.out.println("gene,range,identifier");
-        int id = 0;
-        for (Split split: bestKGenes) {
-            System.out.printf("g%d,%s,%d\n",
-                split.getGeneId(), split.getlSplit(), id++);
-            System.out.printf("g%d,%s,%d\n",
-                split.getGeneId(), split.getrSplit(), id++);
-        }
+
+        dMap.forEach((id, item) ->
+                System.out.printf("g%d,%s,%d\n",
+                        item.geneId, item.range, id));
 
         System.out.println("\n");
     }
 
     private static void printItemizedDataEntropy() {
 
+    }
+
+    private static Map<Integer, MapItem> getDiscretizationMap(List<Split> bestKGenes) {
+        Map<Integer, MapItem> dMap = new HashMap<>();
+        int id = 0;
+
+        for (Split split : bestKGenes) {
+           dMap.put(id++, new MapItem(split.getGeneId(), split.getlSplit()));
+           dMap.put(id++, new MapItem(split.getGeneId(), split.getrSplit()));
+        }
+
+        return dMap;
+    }
+
+    private static class MapItem {
+        private final int geneId;
+        private final SplitRange range;
+
+        public MapItem(int geneId, SplitRange range) {
+            this.geneId = geneId;
+            this.range = range;
+        }
     }
 }
