@@ -1,6 +1,12 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.*;
+import java.util.List;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class P1DPP {
@@ -20,15 +26,28 @@ public class P1DPP {
         List<Split> splits = getSplits(dataset);
 
         // get genes with best splits yielding largest gain
-        List<Split> bestKGenes = splits.stream()
-            .sorted(Comparator.comparingDouble(Split::getGain).reversed())
-            .limit(k)
-            .collect(Collectors.toList());
+        List<Split> bestKGenes = getBestKGenes(k, splits);
 
         // Task 1
         doTask1(bestKGenes, dataset);
 
         // Task 2
+    }
+
+    private static List<Split> getBestKGenes(int k, List<Split> geneSplits) {
+        List<Split> bestKGenes = geneSplits.stream()
+            .sorted(Comparator.comparingDouble(Split::getGain).reversed())
+            .limit(k)
+            .collect(Collectors.toList());
+
+        // Update split ranges with ids
+        int itemId = 0;
+        for (Split split : bestKGenes) {
+            split.getlSplit().setItemId(itemId++);
+            split.getrSplit().setItemId(itemId++);
+        }
+
+        return bestKGenes;
     }
 
     private static Data[] generateDataset(String datafilename) {
@@ -59,11 +78,10 @@ public class P1DPP {
         printAttRankEntropy(bestKGenes);
 
         // (b)
-        Map<Integer, MapItem> discretizationMap = getDiscretizationMap(bestKGenes);
-        printEntropyItemMap(discretizationMap);
+        printEntropyItemMap(bestKGenes);
 
         // (c)
-        printItemizedDataEntropy(bestKGenes, discretizationMap, dataset);
+        printItemizedDataEntropy(bestKGenes, dataset);
     }
 
     private static List<Split> getSplits(Data[] dataset) {
@@ -135,55 +153,49 @@ public class P1DPP {
         System.out.println("\n");
     }
 
-    private static void printEntropyItemMap(Map<Integer, MapItem> dMap) {
+    private static void printEntropyItemMap(List<Split> bestKGenes) {
         System.out.println("gene,range,identifier");
 
-        dMap.forEach((id, item) ->
-                System.out.printf("g%d,%s,%d\n",
-                        item.geneId, item.range, id));
+        List<SimpleEntry<Integer, SplitRange>> splitRanges = new ArrayList<>();
+        for (Split split: bestKGenes) {
+            splitRanges.add(new SimpleEntry<>(split.getGeneId(), split.getlSplit()));
+            splitRanges.add(new SimpleEntry<>(split.getGeneId(), split.getrSplit()));
+        }
+
+        splitRanges.stream()
+            .sorted(Comparator.comparingInt(sr -> sr.getValue().getItemId()))
+            .forEach(sr -> System.out.printf("g%d,%s\n", sr.getKey(), sr.getValue()));
 
         System.out.println("\n");
     }
 
-    private static void printItemizedDataEntropy(List<Split> bestKGenes, Map<Integer, MapItem> dMap, Data[] dataset) {
-        // for each row:
-        //   for each gene column:
-        //     check bounds for gene column;
-        //     assign id accordingly
-
+    private static void printItemizedDataEntropy(List<Split> bestKGenes, Data[] dataset) {
         // get target genes
-        int[] kGenes = bestKGenes.stream()
-            .sorted(Comparator.comparingInt(Split::getGeneId))
-            .mapToInt(Split::getGeneId)
-            .toArray();
+        Split[] kGenes = bestKGenes.toArray(Split[]::new);
 
-        double[][] itemizedData = new double[dataset.length][kGenes.length];
+        int[][] itemizedData = new int[dataset.length][kGenes.length];
 
-        for (int row = 0; row < dataset.length; row++)
-            for (int column = 0; column < kGenes.length; column++)
-                itemizedData[row][column] = dataset[row].getGene(kGenes[column]);
-
-    }
-
-    private static Map<Integer, MapItem> getDiscretizationMap(List<Split> bestKGenes) {
-        Map<Integer, MapItem> dMap = new HashMap<>();
-        int id = 0;
-
-        for (Split split : bestKGenes) {
-           dMap.put(id++, new MapItem(split.getGeneId(), split.getlSplit()));
-           dMap.put(id++, new MapItem(split.getGeneId(), split.getrSplit()));
+        // get classification for each item
+        for (int row = 0; row < dataset.length; row++) {
+            for (int column = 0; column < kGenes.length; column++) {
+                int geneId = kGenes[column].getGeneId();
+                double value = dataset[row].getGene(geneId);
+                itemizedData[row][column] = kGenes[column].getItemIdForValue(value);
+            }
         }
 
-        return dMap;
+        // print values
+        String header = Arrays.stream(kGenes)
+            .map(split -> String.format("g%d", split.getGeneId()))
+            .collect(Collectors.joining(","));
+
+        System.out.println(header);
+        Arrays.stream(itemizedData).forEach(row ->
+            System.out.println(
+                Arrays.stream(row)
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.joining(","))));
+
     }
 
-    private static class MapItem {
-        private final int geneId;
-        private final SplitRange range;
-
-        public MapItem(int geneId, SplitRange range) {
-            this.geneId = geneId;
-            this.range = range;
-        }
-    }
 }

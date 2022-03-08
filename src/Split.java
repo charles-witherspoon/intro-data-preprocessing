@@ -39,6 +39,13 @@ public class Split {
         return rSplit;
     }
 
+    public int getItemIdForValue(double value) {
+        if (lSplit.contains(value))
+            return lSplit.getItemId();
+
+        return rSplit.getItemId();
+    }
+
     public static Split getBetterSplit(Split a, Split b) {
         if (a == null)
             return b;
