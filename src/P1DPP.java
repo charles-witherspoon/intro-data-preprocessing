@@ -11,27 +11,24 @@ public class P1DPP {
         int k = Integer.parseInt(args[1]);
         int m = Integer.parseInt(args[2]);
 
+        // parse dataset
         Data[] dataset = generateDataset(datafilename);
         if (dataset == null)
             return;
 
-//        listPossibleTotalEntropies();
+        // get best splits for each gene
+        List<Split> splits = getSplits(dataset);
+
+        // get genes with best splits yielding largest gain
+        List<Split> bestKGenes = splits.stream()
+            .sorted(Comparator.comparingDouble(Split::getGain).reversed())
+            .limit(k)
+            .collect(Collectors.toList());
+
         // Task 1
-        doTask1(dataset, k);
+        doTask1(bestKGenes, dataset);
 
         // Task 2
-    }
-    private static void listPossibleTotalEntropies() {
-        double N = 62.0;
-
-        for (int i = 0; i <= 62; i++) {
-            double pNum = i;
-            double p = pNum / N;
-            double n = (N - pNum) / N;
-
-            double entropy = -1.0 * ((p * log2(p)) + (n * log2(n)));
-            System.out.printf("p=%d/62\tn=%d/62\tentropy=%7.17f\n", i, (int) (N - i), entropy);
-        }
     }
 
     private static Data[] generateDataset(String datafilename) {
@@ -57,25 +54,16 @@ public class P1DPP {
         }
     }
 
-    private static void doTask1(Data[] dataset, int k) {
-
-        List<Split> splits = getSplits(dataset);
-
-        // order splits by gain
-        List<Split> bestKGenes = splits.stream()
-            .sorted(Comparator.comparingDouble(Split::getGain).reversed())
-            .limit(k)
-            .collect(Collectors.toList());
-
+    private static void doTask1(List<Split> bestKGenes, Data[] dataset) {
         // (a)
-        printAttRankEntropy(bestKGenes, k);
+        printAttRankEntropy(bestKGenes);
 
         // (b)
         Map<Integer, MapItem> discretizationMap = getDiscretizationMap(bestKGenes);
         printEntropyItemMap(discretizationMap);
 
         // (c)
-        printItemizedDataEntropy();
+        printItemizedDataEntropy(bestKGenes, discretizationMap, dataset);
     }
 
     private static List<Split> getSplits(Data[] dataset) {
@@ -129,7 +117,7 @@ public class P1DPP {
 
         double N = features.size();
         double s1 = splits.get(0).size();
-        double s2 = splits.get(0).size();
+        double s2 = splits.get(1).size();
 
         double info = (s1 / N * entropyS1) + (s2 / N * entropyS2);
         double gain = entropy - info;
@@ -137,8 +125,8 @@ public class P1DPP {
         return new Split(geneId, splitVal, gain);
     }
 
-    private static void printAttRankEntropy(List<Split> bestKGenes, int k) {
-        System.out.printf("Best %d genes:\n", k);
+    private static void printAttRankEntropy(List<Split> bestKGenes) {
+        System.out.printf("Best %d genes:\n", bestKGenes.size());
         System.out.println("gene,split,gain");
         for (Split split : bestKGenes)
             System.out.printf("%d,%8.7e,%8.7e\n",
@@ -157,7 +145,23 @@ public class P1DPP {
         System.out.println("\n");
     }
 
-    private static void printItemizedDataEntropy() {
+    private static void printItemizedDataEntropy(List<Split> bestKGenes, Map<Integer, MapItem> dMap, Data[] dataset) {
+        // for each row:
+        //   for each gene column:
+        //     check bounds for gene column;
+        //     assign id accordingly
+
+        // get target genes
+        int[] kGenes = bestKGenes.stream()
+            .sorted(Comparator.comparingInt(Split::getGeneId))
+            .mapToInt(Split::getGeneId)
+            .toArray();
+
+        double[][] itemizedData = new double[dataset.length][kGenes.length];
+
+        for (int row = 0; row < dataset.length; row++)
+            for (int column = 0; column < kGenes.length; column++)
+                itemizedData[row][column] = dataset[row].getGene(kGenes[column]);
 
     }
 
