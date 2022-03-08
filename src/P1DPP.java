@@ -2,9 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -32,6 +30,7 @@ public class P1DPP {
         doTask1(bestKGenes, dataset);
 
         // Task 2
+        doTask2(bestKGenes, m);
     }
 
     private static List<Split> getBestKGenes(int k, List<Split> geneSplits) {
@@ -198,4 +197,19 @@ public class P1DPP {
 
     }
 
+    private static void doTask2(List<Split> bestKGenes, int m) {
+        // (a)
+        printEquidensityItemMap();
+
+        // (b)
+        printItemizedDataEquidensity();
+    }
+
+    private static void printEquidensityItemMap() {
+
+    }
+
+    private static void printItemizedDataEquidensity() {
+
+    }
 }
