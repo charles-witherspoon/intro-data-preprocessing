@@ -199,7 +199,7 @@ public class P1DPP {
     private static String getItemizedDataRow(int[][] itemizedData, int row) {
         return Arrays.stream(itemizedData)
             .map(datum -> String.valueOf(datum[row]))
-            .collect(Collectors.joining(","));
+            .collect(Collectors.joining(",")) + "\n";
     }
 
     private static void doTask2(List<Split> bestKGenes, int m) {
