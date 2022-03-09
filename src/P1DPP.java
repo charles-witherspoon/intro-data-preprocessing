@@ -188,6 +188,8 @@ public class P1DPP {
         for (int row = 0; row < itemizedData[0].length; row++) {
             System.out.println(getItemizedDataRow(itemizedData, row));
         }
+
+        System.out.println("\n");
     }
 
     private static String getItemizedDataRow(int[][] itemizedData, int row) {
@@ -208,14 +210,14 @@ public class P1DPP {
         printEquidensityItemMap(geneBins);
 
         // (b)
-        printItemizedDataEquidensity(geneBins);
+        printItemizedDataEquidensity(geneBins, kGenes);
     }
 
     private static List<Bin> getEquidensityBins(List<Gene> kGenes, int m) {
         List<Bin> geneBins = new ArrayList<>();
         int itemId = 0;
         for (Gene gene : kGenes) {
-            List<Bin> bins = gene.getMBins(m);
+            List<Bin> bins = getMBins(gene, m);
             for (Bin bin : bins) {
                 bin.getRange().setItemId(itemId++);
             }
@@ -223,6 +225,35 @@ public class P1DPP {
         }
 
         return geneBins;
+    }
+
+    private static List<Bin> getMBins(Gene gene, int m) {
+        List<Feature> sortedFeatures = gene.getFeatures().stream()
+            .sorted(Comparator.comparingDouble(Feature::getValue))
+            .collect(Collectors.toList());
+
+        double min = Double.NEGATIVE_INFINITY;
+        double max;
+
+        List<Bin> bins = new ArrayList<>();
+        int i = 0;
+        int binSize = sortedFeatures.size() / m;
+        int extras = sortedFeatures.size() % m;
+        while (i < sortedFeatures.size()) {
+            int leftIndex = i + binSize - 1 + (extras == 0 ? extras : extras--);
+            int rightIndex = leftIndex + 1;
+
+            if (rightIndex >= sortedFeatures.size())
+                max = Double.POSITIVE_INFINITY;
+            else
+                max = (sortedFeatures.get(leftIndex).getValue() + sortedFeatures.get(rightIndex).getValue()) / 2.0;
+
+            bins.add(new Bin(gene ,new SplitRange(min, max)));
+            min = max;
+            i = rightIndex;
+        }
+
+        return bins;
     }
 
     private static void printEquidensityItemMap(List<Bin> geneBins) {
@@ -233,32 +264,36 @@ public class P1DPP {
         System.out.println("\n");
     }
 
-    private static void printItemizedDataEquidensity(List<Bin> geneBins) {
+    private static void printItemizedDataEquidensity(List<Bin> geneBins, List<Gene> kGenes) {
 
+        int[][] itemizedData = kGenes.stream()
+            .map(gene -> gene.getFeatures()
+                .stream()
+                .mapToInt(feature -> getBinClassification(geneBins, gene, feature))
+                .toArray())
+            .toArray(int[][]::new);
+
+        // print values
+        String header = kGenes.stream()
+            .map(gene -> String.format("g%d", gene.getId()))
+            .collect(Collectors.joining(","));
+        System.out.println(header);
+
+        for (int row = 0; row < itemizedData[0].length; row++) {
+            System.out.println(getItemizedDataRow(itemizedData, row));
+        }
     }
 
-//    private static void printItemizedDataEntropy(List<Split> bestKGenes) {
-//        int[][] itemizedData = bestKGenes.stream()
-//            .map(split -> split.getGene().getFeatures()
-//                .stream()
-//                .mapToInt(feature -> split.getItemIdForValue(feature.getValue()))
-//                .toArray())
-//            .toArray(int[][]::new);
-//
-//        // print values
-//        String header = bestKGenes.stream()
-//            .map(split -> String.format("g%d", split.getGene().getId()))
-//            .collect(Collectors.joining(","));
-//        System.out.println(header);
-//
-//        for (int row = 0; row < itemizedData[0].length; row++) {
-//            System.out.println(getItemizedDataRow(itemizedData, row));
-//        }
-//    }
-//
-//    private static String getItemizedDataRow(int[][] itemizedData, int row) {
-//        return Arrays.stream(itemizedData)
-//            .map(datum -> String.valueOf(datum[row]))
-//            .collect(Collectors.joining(","));
-//    }
+
+    private static int getBinClassification(List<Bin> bins, Gene gene, Feature feature) {
+        Bin bin = bins.stream()
+            .filter(
+                b -> b.getGene().equals(gene)
+                    && b.getRange().contains(feature.getValue()))
+            .findFirst()
+            .orElseThrow();
+
+        return bin.getRange().getItemId();
+    }
+
 }

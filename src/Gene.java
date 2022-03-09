@@ -10,6 +10,8 @@ public class Gene {
 
     private final List<Feature> features;
 
+    private List<Bin> bins;
+
     public Gene(int id, Data[] dataset) {
         this.id = id;
         this.features = generateFeatureList(id, dataset);
@@ -21,36 +23,6 @@ public class Gene {
 
     public List<Feature> getFeatures() {
         return features;
-    }
-
-    public List<Bin> getMBins(int m) {
-
-        List<Feature> sortedFeatures = features.stream()
-            .sorted(Comparator.comparingDouble(Feature::getValue))
-            .collect(Collectors.toList());
-
-        double min = Double.NEGATIVE_INFINITY;
-        double max;
-
-        List<Bin> bins = new ArrayList<>();
-        int i = 0;
-        int binSize = sortedFeatures.size() / m;
-        int extras = sortedFeatures.size() % m;
-        while (i < sortedFeatures.size()) {
-            int leftIndex = i + binSize - 1 + (extras == 0 ? extras : extras--);
-            int rightIndex = leftIndex + 1;
-
-            if (rightIndex >= sortedFeatures.size())
-                max = Double.POSITIVE_INFINITY;
-            else
-                max = (sortedFeatures.get(leftIndex).getValue() + sortedFeatures.get(rightIndex).getValue()) / 2.0;
-
-            bins.add(new Bin(this ,new SplitRange(min, max)));
-            min = max;
-            i = rightIndex;
-        }
-
-        return bins;
     }
 
     private static List<Feature> generateFeatureList(int id, Data[] dataset) {
