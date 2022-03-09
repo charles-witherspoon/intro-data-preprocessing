@@ -208,18 +208,18 @@ public class P1DPP {
         printEquidensityItemMap(geneBins);
 
         // (b)
-        printItemizedDataEquidensity();
+        printItemizedDataEquidensity(geneBins);
     }
 
     private static List<Bin> getEquidensityBins(List<Gene> kGenes, int m) {
         List<Bin> geneBins = new ArrayList<>();
         int itemId = 0;
         for (Gene gene : kGenes) {
-            List<SplitRange> bins = gene.getMBins(m);
-            for (SplitRange range : bins) {
-                range.setItemId(itemId++);
-                geneBins.add(new Bin(gene, range));
+            List<Bin> bins = gene.getMBins(m);
+            for (Bin bin : bins) {
+                bin.getRange().setItemId(itemId++);
             }
+            geneBins.addAll(bins);
         }
 
         return geneBins;
@@ -233,7 +233,7 @@ public class P1DPP {
         System.out.println("\n");
     }
 
-    private static void printItemizedDataEquidensity() {
+    private static void printItemizedDataEquidensity(List<Bin> geneBins) {
 
     }
 

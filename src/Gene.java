@@ -23,7 +23,7 @@ public class Gene {
         return features;
     }
 
-    public List<SplitRange> getMBins(int m) {
+    public List<Bin> getMBins(int m) {
 
         List<Feature> sortedFeatures = features.stream()
             .sorted(Comparator.comparingDouble(Feature::getValue))
@@ -32,7 +32,7 @@ public class Gene {
         double min = Double.NEGATIVE_INFINITY;
         double max;
 
-        List<SplitRange> bins = new ArrayList<>();
+        List<Bin> bins = new ArrayList<>();
         int i = 0;
         int binSize = sortedFeatures.size() / m;
         int extras = sortedFeatures.size() % m;
@@ -45,7 +45,7 @@ public class Gene {
             else
                 max = (sortedFeatures.get(leftIndex).getValue() + sortedFeatures.get(rightIndex).getValue()) / 2.0;
 
-            bins.add(new SplitRange(min, max));
+            bins.add(new Bin(this ,new SplitRange(min, max)));
             min = max;
             i = rightIndex;
         }
