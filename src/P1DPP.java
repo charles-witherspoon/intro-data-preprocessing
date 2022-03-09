@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.*;
@@ -33,6 +32,7 @@ public class P1DPP {
     }
 
     private static List<Split> getBestKGenes(int k, List<Split> geneSplits) {
+        // Best k splits in descending order of information gain
         List<Split> bestKGenes = geneSplits.stream()
             .sorted(Comparator.comparingDouble(Split::getGain).reversed())
             .limit(k)
