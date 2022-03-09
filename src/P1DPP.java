@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Collectors;
@@ -146,29 +148,33 @@ public class P1DPP {
     }
 
     private static void printAttRankEntropy(List<Split> bestKGenes) {
-        System.out.printf("Best %d genes:\n", bestKGenes.size());
-        System.out.println("gene,split,gain");
-        for (Split split : bestKGenes)
-            System.out.printf("%d,%8.7e,%8.7e\n",
-                split.getGene().getId(), split.getValue(), split.getGain());
-
-        System.out.println("\n");
+        try (FileWriter writer = new FileWriter("attRankEntropy.txt")){
+            for (Split split : bestKGenes)
+                writer.write(String.format("g%d,%8.7e,%8.7e\n",
+                    split.getGene().getId() + 1, split.getValue(), split.getGain()));
+        } catch (Exception e) {
+            System.out.println("Error writing to attRankEntropy.txt");
+            System.exit(1);
+        }
     }
 
     private static void printEntropyItemMap(List<Split> bestKGenes) {
-        System.out.println("gene,range,identifier");
+        try (FileWriter writer = new FileWriter("entropyItemMap.txt")) {
+            List<SimpleEntry<Integer, SplitRange>> splitRanges = new ArrayList<>();
+            for (Split split: bestKGenes) {
+                splitRanges.add(new SimpleEntry<>(split.getGene().getId(), split.getlSplit()));
+                splitRanges.add(new SimpleEntry<>(split.getGene().getId(), split.getrSplit()));
+            }
 
-        List<SimpleEntry<Integer, SplitRange>> splitRanges = new ArrayList<>();
-        for (Split split: bestKGenes) {
-            splitRanges.add(new SimpleEntry<>(split.getGene().getId(), split.getlSplit()));
-            splitRanges.add(new SimpleEntry<>(split.getGene().getId(), split.getrSplit()));
+            for (SimpleEntry<Integer, SplitRange> entry : splitRanges) {
+                int geneId = entry.getKey();
+                SplitRange sr = entry.getValue();
+                writer.write(String.format("g%d,%s\n", geneId, sr));
+            }
+        } catch (Exception e) {
+            System.out.println("Error writing to entropyItemMap.txt");
+            System.exit(2);
         }
-
-        splitRanges.stream()
-            .sorted(Comparator.comparingInt(sr -> sr.getValue().getItemId()))
-            .forEach(sr -> System.out.printf("g%d,%s\n", sr.getKey(), sr.getValue()));
-
-        System.out.println("\n");
     }
 
     private static void printItemizedDataEntropy(List<Split> bestKGenes) {
@@ -180,16 +186,14 @@ public class P1DPP {
             .toArray(int[][]::new);
 
         // print values
-        String header = bestKGenes.stream()
-            .map(split -> String.format("g%d", split.getGene().getId()))
-            .collect(Collectors.joining(","));
-        System.out.println(header);
-
-        for (int row = 0; row < itemizedData[0].length; row++) {
-            System.out.println(getItemizedDataRow(itemizedData, row));
+        try (FileWriter writer = new FileWriter("itemizedDataEntropy.txt")) {
+            for (int row = 0; row < itemizedData[0].length; row++) {
+                writer.write(getItemizedDataRow(itemizedData, row));
+            }
+        } catch (Exception e) {
+            System.out.println("Error writing to itemizedDataEntropy.txt");
+            System.exit(3);
         }
-
-        System.out.println("\n");
     }
 
     private static String getItemizedDataRow(int[][] itemizedData, int row) {
@@ -257,11 +261,14 @@ public class P1DPP {
     }
 
     private static void printEquidensityItemMap(List<Bin> geneBins) {
-        System.out.println("gene,range,identifier");
-
-        geneBins.forEach(bin -> System.out.printf("g%d,%s\n", bin.getGene().getId(), bin.getRange()));
-
-        System.out.println("\n");
+        try (FileWriter writer = new FileWriter("equidensityItemMap.txt")) {
+            for (Bin bin : geneBins) {
+                writer.write(String.format("g%d,%s\n", bin.getGene().getId(), bin.getRange()));
+            }
+        } catch (Exception e) {
+            System.out.println("Error writing to equidensityItemMap.txt");
+            System.exit(4);
+        }
     }
 
     private static void printItemizedDataEquidensity(List<Bin> geneBins, List<Gene> kGenes) {
@@ -273,14 +280,13 @@ public class P1DPP {
                 .toArray())
             .toArray(int[][]::new);
 
-        // print values
-        String header = kGenes.stream()
-            .map(gene -> String.format("g%d", gene.getId()))
-            .collect(Collectors.joining(","));
-        System.out.println(header);
-
-        for (int row = 0; row < itemizedData[0].length; row++) {
-            System.out.println(getItemizedDataRow(itemizedData, row));
+        try (FileWriter writer = new FileWriter("itemizedDataEquidensity.txt")) {
+            for (int row = 0; row < itemizedData[0].length; row++) {
+                writer.write(getItemizedDataRow(itemizedData, row));
+            }
+        } catch (Exception e) {
+            System.out.println("Error writing to itemizedDataEquidensity.txt");
+            System.exit(5);
         }
     }
 
