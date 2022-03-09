@@ -7,9 +7,7 @@ public class Gene {
     private final int id;
 
     private final List<Feature> features;
-
-    private List<Bin> bins;
-
+    
     public Gene(int id, Data[] dataset) {
         this.id = id + 1;
         this.features = generateFeatureList(id, dataset);
