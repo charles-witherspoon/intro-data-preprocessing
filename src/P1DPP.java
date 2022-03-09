@@ -3,7 +3,6 @@ import java.io.FileReader;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class P1DPP {
 
@@ -203,15 +202,35 @@ public class P1DPP {
             .map(Split::getGene)
             .collect(Collectors.toList());
 
+        List<SimpleEntry<Integer, SplitRange>> geneBins = getEquidensityBins(kGenes, m);
+
         // (a)
-        printEquidensityItemMap(bestKGenes, m);
+        printEquidensityItemMap(geneBins);
 
         // (b)
         printItemizedDataEquidensity();
     }
 
-    private static void printEquidensityItemMap(List<Split> bestKGenes, int m) {
+    private static List<SimpleEntry<Integer, SplitRange>> getEquidensityBins(List<Gene> kGenes, int m) {
+        List<SimpleEntry<Integer, SplitRange>> geneBins = new ArrayList<>();
+        int itemId = 0;
+        for (Gene gene : kGenes) {
+            List<SplitRange> bins = gene.getMBins(m);
+            for (SplitRange bin : bins) {
+                bin.setItemId(itemId++);
+                geneBins.add(new SimpleEntry<>(gene.getId(), bin));
+            }
+        }
 
+        return geneBins;
+    }
+
+    private static void printEquidensityItemMap(List<SimpleEntry<Integer, SplitRange>> geneBins) {
+        System.out.println("gene,range,identifier");
+
+        geneBins.forEach(entry -> System.out.printf("g%d,%s\n", entry.getKey(), entry.getValue()));
+
+        System.out.println("\n");
     }
 
     private static void printItemizedDataEquidensity() {
