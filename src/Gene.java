@@ -22,11 +22,16 @@ public class Gene {
         return features;
     }
 
+    public int[] getItemizedData(Split classifier) {
+        return features.stream()
+            .mapToInt(feature -> classifier.getItemIdForValue(feature.getValue()))
+            .toArray();
+    }
+
     private static List<Feature> generateFeatureList(int id, Data[] dataset) {
         return Arrays.stream(dataset)
             .map(data ->
                 new Feature(data.getGene(id), data.getClassification()))
-            .sorted(Comparator.comparingDouble(Feature::getValue))
             .collect(Collectors.toList());
     }
 }

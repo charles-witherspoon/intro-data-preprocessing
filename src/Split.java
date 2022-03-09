@@ -1,9 +1,8 @@
 public class Split {
 
-    private final int geneId;
+    private final Gene gene;
 
     private final double value;
-
 
     private final double gain;
 
@@ -11,16 +10,16 @@ public class Split {
 
     private final SplitRange rSplit;
 
-    public Split(int geneId, double value, double gain) {
-        this.geneId = geneId;
+    public Split(Gene gene, double value, double gain) {
+        this.gene = gene;
         this.value = value;
         this.gain = gain;
         this.lSplit = new SplitRange(Double.NEGATIVE_INFINITY, value);
         this.rSplit = new SplitRange(value, Double.POSITIVE_INFINITY);
     }
 
-    public int getGeneId() {
-        return geneId;
+    public Gene getGene() {
+        return gene;
     }
 
     public double getValue() {

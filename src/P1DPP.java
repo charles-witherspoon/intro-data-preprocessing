@@ -1,11 +1,9 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.List;
-import java.util.Comparator;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class P1DPP {
 
@@ -27,7 +25,7 @@ public class P1DPP {
         List<Split> bestKGenes = getBestKGenes(k, splits);
 
         // Task 1
-        doTask1(bestKGenes, dataset);
+        doTask1(bestKGenes);
 
         // Task 2
         doTask2(bestKGenes, m);
@@ -72,7 +70,7 @@ public class P1DPP {
         }
     }
 
-    private static void doTask1(List<Split> bestKGenes, Data[] dataset) {
+    private static void doTask1(List<Split> bestKGenes) {
         // (a)
         printAttRankEntropy(bestKGenes);
 
@@ -80,22 +78,28 @@ public class P1DPP {
         printEntropyItemMap(bestKGenes);
 
         // (c)
-        printItemizedDataEntropy(bestKGenes, dataset);
+        printItemizedDataEntropy(bestKGenes);
     }
+
 
     private static List<Split> getSplits(Data[] dataset) {
         List<Split> splits = new ArrayList<>();
+
+        // get total number of features
         int geneCount = dataset[0].getGenes().length;
+
         for (int i = 0; i < geneCount; i++) {
             Gene g = new Gene(i, dataset);
-            List<Feature> features = g.getFeatures();
+            List<Feature> sortedFeatures = g.getFeatures().stream()
+                .sorted(Comparator.comparingDouble(Feature::getValue))
+                .collect(Collectors.toList());
 
             Split bestSplit = null;
-            double entropy = getEntropy(features);
+            double entropy = getEntropy(sortedFeatures);
 
-            for (int j = 0; j < features.size() - 1; j++) {
-                double splitVal = (features.get(j).getValue() + features.get(j + 1).getValue()) / 2.0;
-                Split split = getInfoFromSplit(splitVal, features, entropy, i);
+            for (int j = 0; j < sortedFeatures.size() - 1; j++) {
+                double splitVal = (sortedFeatures.get(j).getValue() + sortedFeatures.get(j + 1).getValue()) / 2.0;
+                Split split = getInfoFromSplit(splitVal, sortedFeatures, entropy, g);
                 bestSplit = Split.getBetterSplit(split, bestSplit);
             }
 
@@ -124,7 +128,7 @@ public class P1DPP {
         return Math.log(a) / Math.log(2.0);
     }
 
-    private static Split getInfoFromSplit(double splitVal, List<Feature> features, double entropy, int geneId) {
+    private static Split getInfoFromSplit(double splitVal, List<Feature> features, double entropy, Gene gene) {
         List<List<Feature>> splits = new ArrayList<>(features.stream()
             .collect(Collectors.partitioningBy(s -> s.getValue() < splitVal))
             .values());
@@ -139,7 +143,7 @@ public class P1DPP {
         double info = (s1 / N * entropyS1) + (s2 / N * entropyS2);
         double gain = entropy - info;
 
-        return new Split(geneId, splitVal, gain);
+        return new Split(gene, splitVal, gain);
     }
 
     private static void printAttRankEntropy(List<Split> bestKGenes) {
@@ -147,7 +151,7 @@ public class P1DPP {
         System.out.println("gene,split,gain");
         for (Split split : bestKGenes)
             System.out.printf("%d,%8.7e,%8.7e\n",
-                split.getGeneId(), split.getValue(), split.getGain());
+                split.getGene().getId(), split.getValue(), split.getGain());
 
         System.out.println("\n");
     }
@@ -157,8 +161,8 @@ public class P1DPP {
 
         List<SimpleEntry<Integer, SplitRange>> splitRanges = new ArrayList<>();
         for (Split split: bestKGenes) {
-            splitRanges.add(new SimpleEntry<>(split.getGeneId(), split.getlSplit()));
-            splitRanges.add(new SimpleEntry<>(split.getGeneId(), split.getrSplit()));
+            splitRanges.add(new SimpleEntry<>(split.getGene().getId(), split.getlSplit()));
+            splitRanges.add(new SimpleEntry<>(split.getGene().getId(), split.getrSplit()));
         }
 
         splitRanges.stream()
@@ -168,44 +172,45 @@ public class P1DPP {
         System.out.println("\n");
     }
 
-    private static void printItemizedDataEntropy(List<Split> bestKGenes, Data[] dataset) {
-        // get target genes
-        Split[] kGenes = bestKGenes.toArray(Split[]::new);
-
-        int[][] itemizedData = new int[dataset.length][kGenes.length];
-
-        // get classification for each item
-        for (int row = 0; row < dataset.length; row++) {
-            for (int column = 0; column < kGenes.length; column++) {
-                int geneId = kGenes[column].getGeneId();
-                double value = dataset[row].getGene(geneId);
-                itemizedData[row][column] = kGenes[column].getItemIdForValue(value);
-            }
-        }
+    private static void printItemizedDataEntropy(List<Split> bestKGenes) {
+        int[][] itemizedData = bestKGenes.stream()
+            .map(split -> split.getGene().getFeatures()
+                .stream()
+                .mapToInt(feature -> split.getItemIdForValue(feature.getValue()))
+                .toArray())
+            .toArray(int[][]::new);
 
         // print values
-        String header = Arrays.stream(kGenes)
-            .map(split -> String.format("g%d", split.getGeneId()))
+        String header = bestKGenes.stream()
+            .map(split -> String.format("g%d", split.getGene().getId()))
             .collect(Collectors.joining(","));
-
         System.out.println(header);
-        Arrays.stream(itemizedData).forEach(row ->
-            System.out.println(
-                Arrays.stream(row)
-                    .mapToObj(String::valueOf)
-                    .collect(Collectors.joining(","))));
 
+        for (int row = 0; row < itemizedData[0].length; row++) {
+            System.out.println(getItemizedDataRow(itemizedData, row));
+        }
+    }
+
+    private static String getItemizedDataRow(int[][] itemizedData, int row) {
+        return Arrays.stream(itemizedData)
+            .map(datum -> String.valueOf(datum[row]))
+            .collect(Collectors.joining(","));
     }
 
     private static void doTask2(List<Split> bestKGenes, int m) {
+
+        List<Gene> kGenes = bestKGenes.stream()
+            .map(Split::getGene)
+            .collect(Collectors.toList());
+
         // (a)
-        printEquidensityItemMap();
+        printEquidensityItemMap(bestKGenes, m);
 
         // (b)
         printItemizedDataEquidensity();
     }
 
-    private static void printEquidensityItemMap() {
+    private static void printEquidensityItemMap(List<Split> bestKGenes, int m) {
 
     }
 
