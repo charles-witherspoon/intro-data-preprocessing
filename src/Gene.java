@@ -1,6 +1,4 @@
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,7 +11,7 @@ public class Gene {
     private List<Bin> bins;
 
     public Gene(int id, Data[] dataset) {
-        this.id = id;
+        this.id = id + 1;
         this.features = generateFeatureList(id, dataset);
     }
 

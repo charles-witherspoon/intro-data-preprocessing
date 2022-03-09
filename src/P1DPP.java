@@ -151,7 +151,7 @@ public class P1DPP {
         try (FileWriter writer = new FileWriter("attRankEntropy.txt")){
             for (Split split : bestKGenes)
                 writer.write(String.format("g%d,%8.7e,%8.7e\n",
-                    split.getGene().getId() + 1, split.getValue(), split.getGain()));
+                    split.getGene().getId(), split.getValue(), split.getGain()));
         } catch (Exception e) {
             System.out.println("Error writing to attRankEntropy.txt");
             System.exit(1);
