@@ -47,7 +47,7 @@ public class Gene {
 
             bins.add(new SplitRange(min, max));
             min = max;
-            i = leftIndex;
+            i = rightIndex;
         }
 
         return bins;

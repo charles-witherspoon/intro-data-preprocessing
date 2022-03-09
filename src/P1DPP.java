@@ -202,7 +202,7 @@ public class P1DPP {
             .map(Split::getGene)
             .collect(Collectors.toList());
 
-        List<SimpleEntry<Integer, SplitRange>> geneBins = getEquidensityBins(kGenes, m);
+        List<Bin> geneBins = getEquidensityBins(kGenes, m);
 
         // (a)
         printEquidensityItemMap(geneBins);
@@ -211,24 +211,24 @@ public class P1DPP {
         printItemizedDataEquidensity();
     }
 
-    private static List<SimpleEntry<Integer, SplitRange>> getEquidensityBins(List<Gene> kGenes, int m) {
-        List<SimpleEntry<Integer, SplitRange>> geneBins = new ArrayList<>();
+    private static List<Bin> getEquidensityBins(List<Gene> kGenes, int m) {
+        List<Bin> geneBins = new ArrayList<>();
         int itemId = 0;
         for (Gene gene : kGenes) {
             List<SplitRange> bins = gene.getMBins(m);
-            for (SplitRange bin : bins) {
-                bin.setItemId(itemId++);
-                geneBins.add(new SimpleEntry<>(gene.getId(), bin));
+            for (SplitRange range : bins) {
+                range.setItemId(itemId++);
+                geneBins.add(new Bin(gene, range));
             }
         }
 
         return geneBins;
     }
 
-    private static void printEquidensityItemMap(List<SimpleEntry<Integer, SplitRange>> geneBins) {
+    private static void printEquidensityItemMap(List<Bin> geneBins) {
         System.out.println("gene,range,identifier");
 
-        geneBins.forEach(entry -> System.out.printf("g%d,%s\n", entry.getKey(), entry.getValue()));
+        geneBins.forEach(bin -> System.out.printf("g%d,%s\n", bin.getGene().getId(), bin.getRange()));
 
         System.out.println("\n");
     }
@@ -236,4 +236,29 @@ public class P1DPP {
     private static void printItemizedDataEquidensity() {
 
     }
+
+//    private static void printItemizedDataEntropy(List<Split> bestKGenes) {
+//        int[][] itemizedData = bestKGenes.stream()
+//            .map(split -> split.getGene().getFeatures()
+//                .stream()
+//                .mapToInt(feature -> split.getItemIdForValue(feature.getValue()))
+//                .toArray())
+//            .toArray(int[][]::new);
+//
+//        // print values
+//        String header = bestKGenes.stream()
+//            .map(split -> String.format("g%d", split.getGene().getId()))
+//            .collect(Collectors.joining(","));
+//        System.out.println(header);
+//
+//        for (int row = 0; row < itemizedData[0].length; row++) {
+//            System.out.println(getItemizedDataRow(itemizedData, row));
+//        }
+//    }
+//
+//    private static String getItemizedDataRow(int[][] itemizedData, int row) {
+//        return Arrays.stream(itemizedData)
+//            .map(datum -> String.valueOf(datum[row]))
+//            .collect(Collectors.joining(","));
+//    }
 }
